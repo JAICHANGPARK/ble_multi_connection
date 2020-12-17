@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'BLE Multi Connection'),
     );
   }
 }
@@ -46,6 +46,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   List<String> data0 = [];
   List<String> data1 = [];
+
+  ScrollController controller = new ScrollController();
 
   void _incrementCounter() {
     scanStreamSubscription = flutterBlue.scan(timeout: Duration(seconds: 15)).listen((event) {
@@ -92,15 +94,17 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             MaterialButton(
+              color: Colors.red,
               child: Text("Stop Scan"),
               onPressed: () {
                 flutterBlue.stopScan();
               },
             ),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 MaterialButton(
                   color: Colors.blue,
@@ -119,9 +123,6 @@ class _MyHomePageState extends State<MyHomePage> {
                       });
                     });
                   },
-                ),
-                SizedBox(
-                  width: 24,
                 ),
                 MaterialButton(
                   color: Colors.blue,
@@ -145,7 +146,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ],
             ),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 MaterialButton(
                   color: Colors.blue,
@@ -164,9 +165,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     }
                   },
                 ),
-                SizedBox(
-                  width: 24,
-                ),
                 MaterialButton(
                   color: Colors.blue,
                   child: Text("Listen Data Device 2"),
@@ -177,6 +175,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         print("Data1 : ${event}");
                         if (event.length > 0) {
                           setState(() {
+                            controller.jumpTo(controller.position.maxScrollExtent);
                             data1.add(event[0].toString());
                           });
                         }
@@ -186,51 +185,73 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ],
             ),
-            MaterialButton(
-              child: Text("Disconnected Device 1"),
-              onPressed: () async {
-                await _bluetoothDevice0.disconnect();
-                await dataStreamSubscription0.cancel();
-                dataStreamSubscription0 = null;
-              },
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                MaterialButton(
+                  child: Text("Disconnected Device 1"),
+                  color: Colors.green,
+                  onPressed: () async {
+                    await _bluetoothDevice0.disconnect();
+                    await dataStreamSubscription0?.cancel();
+                    dataStreamSubscription0 = null;
+                    setState(() {
+                      data0.clear();
+                    });
+
+                  },
+                ),
+                MaterialButton(
+                  child: Text("Disconnected Device 2"),
+                  color: Colors.green,
+                  onPressed: () async {
+                    await _bluetoothDevice1.disconnect();
+                    await dataStreamSubscription1?.cancel();
+                    dataStreamSubscription1 = null;
+                    setState(() {
+
+                      data1.clear();
+                    });
+                  },
+                ),
+              ],
             ),
-            MaterialButton(
-              child: Text("Disconnected Device 2"),
-              onPressed: () async {
-                await _bluetoothDevice1.disconnect();
-                await dataStreamSubscription1.cancel();
-                dataStreamSubscription1 = null;
-              },
-            ),
-            Container(
-              height: 240,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      children: [
-                        Expanded(child: Text("Data0")),
-                        Expanded(
-                          child: ListView(
-                            children: [...data0.map((e) => Text(e))],
+
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Container(
+                height: 520,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Expanded(child: Text("Data0")),
+                          Expanded(
+                            child: ListView(
+                              reverse: true,
+                              children: [...data0.map((e) => Text(e))],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: Column(
-                      children: [
-                        Expanded(child: Text("Data1")),
-                        Expanded(
-                          child: ListView(
-                            children: [...data1.map((e) => Text(e))],
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Expanded(child: Text("Data1")),
+                          Expanded(
+                            child: ListView(
+                              controller: controller,
+                              reverse: true,
+                              children: [...data1.map((e) => Text(e))],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             )
           ],
