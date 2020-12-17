@@ -44,6 +44,9 @@ class _MyHomePageState extends State<MyHomePage> {
   BluetoothCharacteristic bluetoothCharacteristic0;
   BluetoothCharacteristic bluetoothCharacteristic1;
 
+  String data0;
+  String data1;
+
   void _incrementCounter() {
     scanStreamSubscription = flutterBlue.scan(timeout: Duration(seconds: 15)).listen((event) {
       print("${event.device.name} / ${event.device.id}");
@@ -90,13 +93,6 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
             MaterialButton(
               child: Text("Stop Scan"),
               onPressed: () {
