@@ -44,8 +44,8 @@ class _MyHomePageState extends State<MyHomePage> {
   BluetoothCharacteristic bluetoothCharacteristic0;
   BluetoothCharacteristic bluetoothCharacteristic1;
 
-  String data0;
-  String data1;
+  List<String> data0 = [];
+  List<String> data1 = [];
 
   void _incrementCounter() {
     scanStreamSubscription = flutterBlue.scan(timeout: Duration(seconds: 15)).listen((event) {
@@ -155,6 +155,11 @@ class _MyHomePageState extends State<MyHomePage> {
                       await bluetoothCharacteristic0.setNotifyValue(true);
                       dataStreamSubscription0 = bluetoothCharacteristic0.value.listen((event) {
                         print("Data0 : ${event}");
+                        if (event.length > 0) {
+                          setState(() {
+                            data0.add(event[0].toString());
+                          });
+                        }
                       });
                     }
                   },
@@ -170,6 +175,11 @@ class _MyHomePageState extends State<MyHomePage> {
                       await bluetoothCharacteristic1.setNotifyValue(true);
                       dataStreamSubscription1 = bluetoothCharacteristic1.value.listen((event) {
                         print("Data1 : ${event}");
+                        if (event.length > 0) {
+                          setState(() {
+                            data1.add(event[0].toString());
+                          });
+                        }
                       });
                     }
                   },
@@ -192,6 +202,37 @@ class _MyHomePageState extends State<MyHomePage> {
                 dataStreamSubscription1 = null;
               },
             ),
+            Container(
+              height: 240,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Expanded(child: Text("Data0")),
+                        Expanded(
+                          child: ListView(
+                            children: [...data0.map((e) => Text(e))],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Expanded(child: Text("Data1")),
+                        Expanded(
+                          child: ListView(
+                            children: [...data1.map((e) => Text(e))],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            )
           ],
         ),
       ),
