@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_blue/flutter_blue.dart';
 
 void main() {
   runApp(MyApp());
@@ -21,15 +24,6 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -38,50 +32,62 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  FlutterBlue flutterBlue = FlutterBlue.instance;
+  StreamSubscription scanStreamSubscription;
+
+  StreamSubscription dataStreamSubscription0;
+  StreamSubscription dataStreamSubscription1;
+
+  BluetoothDevice _bluetoothDevice0;
+  BluetoothDevice _bluetoothDevice1;
+
+  BluetoothCharacteristic bluetoothCharacteristic0;
+  BluetoothCharacteristic bluetoothCharacteristic1;
 
   void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+    scanStreamSubscription = flutterBlue.scan(timeout: Duration(seconds: 15)).listen((event) {
+      print("${event.device.name} / ${event.device.id}");
+      //B4:E6:2D:C9:BD:37
+      //84:0D:8E:D2:A5:6A
+      if (event.device.id.id == "84:0D:8E:D2:A5:6A") {
+        flutterBlue.stopScan().then((_) async {
+          _bluetoothDevice0 = event.device;
+          await _bluetoothDevice0.connect();
+          print("Device Connected");
+        });
+      }
+      // if(event.device.id.id == "B4:E6:2D:C9:BD:37"){
+      //
+      // }
+    });
+  }
+
+  void _incrementCounter2() {
+    scanStreamSubscription = flutterBlue.scan(timeout: Duration(seconds: 15)).listen((event) {
+      print("${event.device.name} / ${event.device.id}");
+      //B4:E6:2D:C9:BD:37
+      //84:0D:8E:D2:A5:6A
+      if (event.device.id.id == "B4:E6:2D:C9:BD:37") {
+        flutterBlue.stopScan().then((_) async {
+          _bluetoothDevice1 = event.device;
+          await _bluetoothDevice1.connect();
+          print("Device Connected");
+        });
+      }
+      // if(event.device.id.id == "B4:E6:2D:C9:BD:37"){
+      //
+      // }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
@@ -91,14 +97,139 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.headline4,
             ),
+            MaterialButton(
+              child: Text("Stop Scan"),
+              onPressed: () {
+                flutterBlue.stopScan();
+              },
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                MaterialButton(
+                  color: Colors.blue,
+                  child: Text("Discover Service Device 1"),
+                  onPressed: () {
+                    _bluetoothDevice0.discoverServices().then((value) {
+                      value.forEach((element) {
+                        print("Service: ${element.uuid.toString()}");
+                        if (element.uuid.toString() == "0000fff0-0000-1000-8000-00805f9b34fb") {
+                          element.characteristics.forEach((element) {
+                            if (element.uuid.toString() == "0000fff2-0000-1000-8000-00805f9b34fb") {
+                              bluetoothCharacteristic0 = element;
+                            }
+                          });
+                        }
+                      });
+                    });
+                  },
+                ),
+                SizedBox(
+                  width: 24,
+                ),
+                MaterialButton(
+                  color: Colors.blue,
+                  child: Text("Discover Service Device 2"),
+                  onPressed: () {
+                    _bluetoothDevice1.discoverServices().then((value) {
+                      value.forEach((element) {
+                        print("Service: ${element.uuid.toString()}");
+                        if (element.uuid.toString() == "0000ffe0-0000-1000-8000-00805f9b34fb") {
+                          element.characteristics.forEach((element) {
+                            print("Char : ${element.uuid.toString()}");
+                            if (element.uuid.toString() == "0000ffe2-0000-1000-8000-00805f9b34fb") {
+                              bluetoothCharacteristic1 = element;
+                            }
+                          });
+                        }
+                      });
+                    });
+                  },
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                MaterialButton(
+                  color: Colors.blue,
+                  child: Text("Listen Data Device 1"),
+                  onPressed: () async {
+                    if (bluetoothCharacteristic0 != null) {
+                      await bluetoothCharacteristic0.setNotifyValue(true);
+                      dataStreamSubscription0 = bluetoothCharacteristic0.value.listen((event) {
+                        print("Data0 : ${event}");
+                      });
+                    }
+                  },
+                ),
+                SizedBox(
+                  width: 24,
+                ),
+                MaterialButton(
+                  color: Colors.blue,
+                  child: Text("Listen Data Device 2"),
+                  onPressed: () async {
+                    if (bluetoothCharacteristic1 != null) {
+                      await bluetoothCharacteristic1.setNotifyValue(true);
+                      dataStreamSubscription1 = bluetoothCharacteristic1.value.listen((event) {
+                        print("Data1 : ${event}");
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
+            MaterialButton(
+              child: Text("Disconnected Device 1"),
+              onPressed: () async {
+                await _bluetoothDevice0.disconnect();
+                await dataStreamSubscription0.cancel();
+                dataStreamSubscription0 = null;
+              },
+            ),
+            MaterialButton(
+              child: Text("Disconnected Device 2"),
+              onPressed: () async {
+                await _bluetoothDevice1.disconnect();
+                await dataStreamSubscription1.cancel();
+                dataStreamSubscription1 = null;
+              },
+            ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            FloatingActionButton(
+              onPressed: _incrementCounter,
+              tooltip: 'Increment',
+              child: Icon(Icons.search),
+            ),
+            SizedBox(
+              width: 24,
+            ),
+            FloatingActionButton(
+              onPressed: _incrementCounter2,
+              tooltip: 'Increment',
+              child: Icon(Icons.sanitizer),
+            ),
+          ],
+        ),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    scanStreamSubscription.cancel();
+    dataStreamSubscription0.cancel();
+    dataStreamSubscription1.cancel();
+    super.dispose();
   }
 }
